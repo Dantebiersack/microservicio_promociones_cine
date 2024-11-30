@@ -5,30 +5,27 @@ const pool = require('../db/connection');
 // Obtener promociones
 router.get('/', async (req, res) => {
     try {
-        const [promociones] = await pool.query(`
+        const [rows] = await pool.query(`
             SELECT 
-                p.id_promocion,
-                p.descripcion,
-                p.fecha_inicio,
-                p.fecha_fin,
-                p.porcentaje_descuento,
-                p.id_producto_fk,
-                pr.nombre_producto
-            FROM 
-                promocion_dulceria p
-            INNER JOIN 
-                producto pr 
-            ON 
-                p.id_producto_fk = pr.producto_id
-            WHERE 
-                p.estatus = 1
+                promocion_dulceria.id_promocion,
+                promocion_dulceria.descripcion,
+                promocion_dulceria.fecha_inicio,
+                promocion_dulceria.fecha_fin,
+                promocion_dulceria.porcentaje_descuento,
+                producto.nombre_producto AS nombre_producto, -- Incluye el nombre del producto
+                promocion_dulceria.estatus
+            FROM promocion_dulceria
+            INNER JOIN producto
+            ON promocion_dulceria.id_producto_fk = producto.producto_id
+            WHERE promocion_dulceria.estatus = 1
         `);
-        res.json(promociones); // Enviar las promociones como JSON
+        res.json(rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error al obtener las promociones' });
     }
 });
+
 
 // Crear nueva promoción
 router.post('/', async (req, res) => {
