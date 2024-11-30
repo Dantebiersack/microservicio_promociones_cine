@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
                 promocion_dulceria.fecha_inicio,
                 promocion_dulceria.fecha_fin,
                 promocion_dulceria.porcentaje_descuento,
-                producto.nombre_producto AS nombre_producto, -- Incluye el nombre del producto
+                producto.nombre_producto AS nombre_producto,
                 promocion_dulceria.estatus
             FROM promocion_dulceria
             INNER JOIN producto
