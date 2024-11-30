@@ -93,4 +93,23 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+// Obtener una promoción por ID
+router.get('/:id', async (req, res) => {
+    const { id } = req.params; // Captura el parámetro ID desde la URL
+    try {
+        const [rows] = await pool.query(
+            'SELECT * FROM promocion_dulceria WHERE id_promocion = ?',
+            [id]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Promoción no encontrada' });
+        }
+        res.json(rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al obtener la promoción' });
+    }
+});
+
+
 module.exports = router;
