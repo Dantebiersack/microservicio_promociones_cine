@@ -1,6 +1,8 @@
 const cors = require('cors');
 const express = require('express');
 const promocionesRoutes = require('./routes/promociones');
+
+const productosRoutes = require('./routes/productos');
 require('dotenv').config();
 
 const app = express();
@@ -11,6 +13,9 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
     allowedHeaders: ['Content-Type', 'Authorization'] // Cabeceras permitidas
 }));
+
+app.use('/api/productos', productosRoutes);
+
 
 // Middleware
 app.use(express.json());
