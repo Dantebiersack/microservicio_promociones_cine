@@ -2,86 +2,95 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/connection');
 
-// Obtener todas las promociones
+// Obtener promociones
 router.get('/', async (req, res) => {
     try {
-        const [rows] = await pool.query(
-            `SELECT * FROM promocion_dulceria WHERE estatus = 1`
-        );
-        res.json(rows);
+        const [promociones] = await pool.query(`
+            SELECT 
+                p.id_promocion,
+                p.descripcion,
+                p.fecha_inicio,
+                p.fecha_fin,
+                p.porcentaje_descuento,
+                p.id_producto_fk,
+                pr.nombre_producto
+            FROM 
+                promocion_dulceria p
+            INNER JOIN 
+                producto pr 
+            ON 
+                p.id_producto_fk = pr.producto_id
+            WHERE 
+                p.estatus = 1
+        `);
+        res.json(promociones); // Enviar las promociones como JSON
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error al obtener las promociones' });
     }
 });
 
-
-// Crear una nueva promoción
+// Crear nueva promoción
 router.post('/', async (req, res) => {
-    const { descripcion, fecha_inicio, fecha_fin, id_producto_fk, porcentaje_descuento, estatus } = req.body;
+    // Verificar si el cuerpo de la solicitud está vacío
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ error: 'El cuerpo de la solicitud está vacío o es inválido.' });
+    }
+
+    const { descripcion, fecha_inicio, fecha_fin, id_producto_fk, porcentaje_descuento } = req.body;
+
+    // Verificar campos obligatorios
+    if (!descripcion || !fecha_inicio || !fecha_fin || !id_producto_fk || !porcentaje_descuento) {
+        return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
+    }
+
     try {
         const [result] = await pool.query(
-            'INSERT INTO promocion_dulceria (descripcion, fecha_inicio, fecha_fin, id_producto_fk, porcentaje_descuento, estatus) VALUES (?, ?, ?, ?, ?, ?)',
-            [descripcion, fecha_inicio, fecha_fin, id_producto_fk, porcentaje_descuento, estatus]
+            `INSERT INTO promocion_dulceria (descripcion, fecha_inicio, fecha_fin, id_producto_fk, porcentaje_descuento, estatus)
+             VALUES (?, ?, ?, ?, ?, 1)`,
+            [descripcion, fecha_inicio, fecha_fin, id_producto_fk, porcentaje_descuento]
         );
-        res.status(201).json({ id: result.insertId });
+        res.json({ id: result.insertId, message: 'Promoción creada exitosamente' });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Error al crear la promoción' });
+        res.status(500).json({ error: 'Error al crear la promoción.' });
     }
 });
 
+
 // Actualizar una promoción
 router.put('/:id', async (req, res) => {
-    const { id } = req.params; // Obtiene el id desde la URL
-    const { descripcion, fecha_inicio, fecha_fin, id_producto_fk, porcentaje_descuento, estatus } = req.body;
-
-    // Validar que todos los campos necesarios estén presentes
-    if (!descripcion || !fecha_inicio || !fecha_fin || !id_producto_fk || porcentaje_descuento === undefined || estatus === undefined) {
-        return res.status(400).json({ error: 'Todos los campos son obligatorios' });
-    }
-
+    const { id } = req.params;
+    const { descripcion, fecha_inicio, fecha_fin, id_producto_fk, porcentaje_descuento } = req.body;
     try {
         const [result] = await pool.query(
-            `UPDATE promocion_dulceria 
-             SET descripcion = ?, fecha_inicio = ?, fecha_fin = ?, id_producto_fk = ?, porcentaje_descuento = ?, estatus = ?
+            `UPDATE promocion_dulceria
+             SET descripcion = ?, fecha_inicio = ?, fecha_fin = ?, id_producto_fk = ?, porcentaje_descuento = ?
              WHERE id_promocion = ?`,
-            [descripcion, fecha_inicio, fecha_fin, id_producto_fk, porcentaje_descuento, estatus, id]
+            [descripcion, fecha_inicio, fecha_fin, id_producto_fk, porcentaje_descuento, id]
         );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Promoción no encontrada' });
-        }
-
-        res.json({ message: 'Promoción actualizada correctamente' });
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Promoción no encontrada' });
+        res.json({ message: 'Promoción actualizada exitosamente' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error al actualizar la promoción' });
     }
 });
 
-// Eliminar una promoción
+// Eliminar una promoción (lógica)
 router.delete('/:id', async (req, res) => {
-    const { id } = req.params; // Obtiene el id desde la URL
-
+    const { id } = req.params;
     try {
         const [result] = await pool.query(
-            `UPDATE promocion_dulceria 
-             SET estatus = 0 
-             WHERE id_promocion = ?`,
+            `UPDATE promocion_dulceria SET estatus = 0 WHERE id_promocion = ?`,
             [id]
         );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Promoción no encontrada' });
-        }
-
-        res.json({ message: 'Promoción eliminada lógicamente (estatus = 0)' });
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Promoción no encontrada' });
+        res.json({ message: 'Promoción eliminada lógicamente' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error al eliminar la promoción' });
     }
 });
-
 
 module.exports = router;

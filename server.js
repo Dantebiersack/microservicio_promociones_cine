@@ -1,27 +1,37 @@
 const cors = require('cors');
 const express = require('express');
 const promocionesRoutes = require('./routes/promociones');
-
 const productosRoutes = require('./routes/productos');
 require('dotenv').config();
 
 const app = express();
 
+// Middleware para parsear JSON
+app.use(express.json());
+
 // Configuración de CORS
-app.use(cors({
-    origin: '*', // Permitir solicitudes desde cualquier origen
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
-    allowedHeaders: ['Content-Type', 'Authorization'] // Cabeceras permitidas
-}));
+const corsOptions = {
+    origin: process.env.FRONTEND_URL || '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
+
+// Registrar las rutas separadas
+app.use('/api/promociones', promocionesRoutes);
 
 app.use('/api/productos', productosRoutes);
 
+// Manejo de rutas no encontradas
+app.use((req, res, next) => {
+    res.status(404).json({ error: 'Ruta no encontrada' });
+});
 
-// Middleware
-app.use(express.json());
-
-// Rutas
-app.use('/api/promociones', promocionesRoutes);
+// Middleware de manejo de errores
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Error interno del servidor' });
+});
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;

@@ -1,15 +1,15 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config();
 
+// Crear pool de conexiones
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+    host: process.env.DB_HOST || 'utpolis-bd-do-user-17863068-0.g.db.ondigitalocean.com',
+    user: process.env.DB_USER || 'doadmin',
+    password: process.env.DB_PASSWORD || 'AVNS_JIB4wAgQdb0dIcjKeWT',
+    database: process.env.DB_NAME || 'utpolis',
+    port: process.env.DB_PORT || 25060, 
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
 module.exports = pool;
